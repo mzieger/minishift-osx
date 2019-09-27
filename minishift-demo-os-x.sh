@@ -1,11 +1,7 @@
 
-# xl command line installieren
-curl -LO https://dist.xebialabs.com/public/xl-cli/9.0.5/darwin-amd64/xl
-chmod +x xl
-sudo mv xl /usr/local/bin
-
-# Installieren brew falls Du das noch nicht hast:
 #!/bin/bash
+
+
 
 ############################
 #helper script function
@@ -15,10 +11,14 @@ setProperty(){
   mv $3.tmp $3
 }
 
+# xl command line installieren
+curl -LO https://dist.xebialabs.com/public/xl-cli/9.0.5/darwin-amd64/xl
+chmod +x xl
+sudo mv xl /usr/local/bin
 
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-
+# Installieren brew falls Du das noch nicht hast:
 #Brew ist ein Paketmanager für OS X (ala apt oder apk bei Linux)
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
 # Dann minishift installieren ... der lädt auch alle Abhängikeiten usw.
 $ brew cask install --force minishift
@@ -36,12 +36,9 @@ minishift start
 minishift console --url --request-oauth-token
 # Den Token brauchst Du dann für deine XLD Connection..
 echo "please update toke in the minishift.xvals file"
+./update_minishift_token.sh
 # Dann die XLD yamls einspielen.
-MYTOKEN="$(oc whoami -t)"
-############################
-### usage: setProperty $key $value $filename
-setProperty "token" $MYTOKEN "./minishift.xlvals"
-import.sh
+./import.sh
 
 
 
