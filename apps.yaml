@@ -1,0 +1,207 @@
+---
+apiVersion: xl-deploy/v1
+kind: Applications
+spec:
+- directory: Applications/OpenShift
+  children:
+  - name: rest-o-rant-project-spec
+    type: udm.Application
+    lastVersion: "1.0"
+    children:
+    - name: "1.0"
+      type: udm.DeploymentPackage
+      deployables:
+      - name: rest-o-rant
+        type: openshift.ProjectSpec
+        projectName: rest-o-rant
+        description: rest-o-rant
+        projectDisplayName: rest-o-rant
+  - directory: rest-o-rant-pod
+    children:
+    - name: rest-o-rant-api-pod
+      type: udm.Application
+      lastVersion: "2.0"
+      children:
+      - name: "1.0"
+        type: udm.DeploymentPackage
+        deployables:
+        - name: rest-o-rant-api-pod
+          type: k8s.PodSpec
+          containers:
+          - name: rest-o-rant-api-pod-container
+            type: k8s.ContainerSpec
+            containerName: rest-o-rant-api-pod
+            image: xebialabsunsupported/rest-o-rant-api:v1
+            ports:
+            - name: port
+              type: k8s.ContainerPortSpec
+              containerPort: "8080"
+          podName: rest-o-rant-api-pod
+          podCreateDeleteRetryCount: "2"
+          labels:
+            name: rest-o-rant-api-pod
+          restartPolicy: OnFailure
+        - name: rest-o-rant-api-service
+          type: k8s.ServiceSpec
+          serviceName: rest-o-rant-api-service
+          serviceType: ClusterIP
+          selectors:
+            name: rest-o-rant-api-pod
+          ports:
+          - name: port
+            type: k8s.ServicePortSpec
+            port: "8080"
+            targetPort: "8080"
+      - name: "2.0"
+        type: udm.DeploymentPackage
+        deployables:
+        - name: rest-o-rant-api-service
+          type: k8s.ServiceSpec
+          serviceName: rest-o-rant-api-service
+          serviceType: ClusterIP
+          selectors:
+            name: rest-o-rant-api-pod
+          ports:
+          - name: port
+            type: k8s.ServicePortSpec
+            port: "8080"
+            targetPort: "8080"
+        - name: rest-o-rant-api-pod
+          type: k8s.PodSpec
+          containers:
+          - name: rest-o-rant-api-pod-container
+            type: k8s.ContainerSpec
+            containerName: rest-o-rant-api-pod
+            image: xebialabsunsupported/rest-o-rant-api:latest
+            ports:
+            - name: port
+              type: k8s.ContainerPortSpec
+              containerPort: "8080"
+          podName: rest-o-rant-api-pod
+          podCreateDeleteRetryCount: "2"
+          labels:
+            name: rest-o-rant-api-pod
+          restartPolicy: OnFailure
+        applicationDependencies:
+          rest-o-rant-project-spec: "1.0"
+    - name: rest-o-rant-web-pod
+      type: udm.Application
+      lastVersion: "3.0"
+      children:
+      - name: "1.0"
+        type: udm.DeploymentPackage
+        deployables:
+        - name: rest-o-rant-web-service
+          type: k8s.ServiceSpec
+          serviceName: rest-o-rant-web-service
+          serviceType: NodePort
+          selectors:
+            name: rest-o-rant-web-pod
+          ports:
+          - name: port
+            type: k8s.ServicePortSpec
+            port: "8080"
+            targetPort: "8080"
+        - name: rest-o-rant-web-pod
+          type: k8s.PodSpec
+          containers:
+          - name: rest-o-rant-web-pod-container
+            type: k8s.ContainerSpec
+            containerName: rest-o-rant-web-pod
+            image: xebialabsunsupported/rest-o-rant-web:v1
+            ports:
+            - name: port
+              type: k8s.ContainerPortSpec
+              containerPort: "8080"
+            envVars:
+            - name: EnvVar
+              type: k8s.envVar.KeyValueSpec
+              properties:
+                API_ENDPOINT: http://rest-o-rant-api-service:8080/rest-o-rant-api
+                NGINX_LISTEN: "8080"
+          podName: rest-o-rant-web-pod
+          podCreateDeleteRetryCount: "2"
+          labels:
+            name: rest-o-rant-web-pod
+          restartPolicy: OnFailure
+      - name: "3.0"
+        type: udm.DeploymentPackage
+        deployables:
+        - name: rest-or-rant-web-route
+          type: openshift.RouteSpec
+          routeName: rest-or-rant-web-route
+          hostName: rest-o-rant-web-service-rest-o-rant.192.168.99.100.nip.io
+          targetPort: "8080"
+          path: /
+          serviceName: rest-o-rant-web-service
+        - name: rest-o-rant-web-service
+          type: k8s.ServiceSpec
+          serviceName: rest-o-rant-web-service
+          serviceType: NodePort
+          selectors:
+            name: rest-o-rant-web-pod
+          ports:
+          - name: port
+            type: k8s.ServicePortSpec
+            port: "8080"
+            targetPort: "8080"
+        - name: rest-o-rant-web-pod
+          type: k8s.PodSpec
+          containers:
+          - name: rest-o-rant-web-pod-container
+            type: k8s.ContainerSpec
+            containerName: rest-o-rant-web-pod
+            image: xebialabsunsupported/rest-o-rant-web:v1
+            ports:
+            - name: port
+              type: k8s.ContainerPortSpec
+              containerPort: "8080"
+            envVars:
+            - name: EnvVar
+              type: k8s.envVar.KeyValueSpec
+              properties:
+                API_ENDPOINT: http://rest-o-rant-api-service:8080/rest-o-rant-api
+                NGINX_LISTEN: "8080"
+          podName: rest-o-rant-web-pod
+          podCreateDeleteRetryCount: "2"
+          labels:
+            name: rest-o-rant-web-pod
+          restartPolicy: OnFailure
+        applicationDependencies:
+          rest-o-rant-api-pod: "2.0"
+      - name: "2.0"
+        type: udm.DeploymentPackage
+        deployables:
+        - name: rest-o-rant-web-service
+          type: k8s.ServiceSpec
+          serviceName: rest-o-rant-web-service
+          serviceType: NodePort
+          selectors:
+            name: rest-o-rant-web-pod
+          ports:
+          - name: port
+            type: k8s.ServicePortSpec
+            port: "8080"
+            targetPort: "8080"
+        - name: rest-o-rant-web-pod
+          type: k8s.PodSpec
+          containers:
+          - name: rest-o-rant-web-pod-container
+            type: k8s.ContainerSpec
+            containerName: rest-o-rant-web-pod
+            image: xebialabs/rest-o-rant-web:latest
+            ports:
+            - name: port
+              type: k8s.ContainerPortSpec
+              containerPort: "8080"
+            envVars:
+            - name: EnvVar
+              type: k8s.envVar.KeyValueSpec
+              properties:
+                API_ENDPOINT: http://rest-o-rant-api-service:8080/rest-o-rant-api
+                NGINX_LISTEN: "8080"
+          podName: rest-o-rant-web-pod
+          labels:
+            name: rest-o-rant-web-pod
+        applicationDependencies:
+          rest-o-rant-api-pod: "1.0"

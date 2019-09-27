@@ -1,0 +1,18 @@
+---
+apiVersion: xl-deploy/v1
+kind: Infrastructure
+spec:
+- directory: Infrastructure/OpenShift
+  children:
+  - name: minishift
+    type: openshift.Server
+    serverUrl: https://192.168.99.100:8443
+    openshiftToken: !value "token"
+    verifyCertificates: false
+    children:
+    - name: rest-o-rant
+      type: openshift.Project
+      deployable: Applications/OpenShift/rest-o-rant-project-spec/1.0/rest-o-rant
+      projectName: rest-o-rant
+      description: rest-o-rant
+      projectDisplayName: rest-o-rant
